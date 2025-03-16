@@ -68,6 +68,31 @@ pnpm build
 pnpm start:prod
 ```
 
+## API Documentation
+
+This application includes Swagger API documentation accessible at `/api` when the server is running:
+
+```
+http://localhost:3000/api
+```
+
+The documentation provides:
+- Interactive API exploration
+- Endpoint testing capability
+- Detailed schema information
+- Request/response examples
+
+### Generating Swagger JSON
+
+You can generate a static Swagger JSON file for use in other Swagger tools or for sharing:
+
+```bash
+# Generate the Swagger JSON file
+pnpm swagger:generate
+```
+
+This will create a `swagger.json` file in the `swagger` directory at the root of the project. This file can be used with tools like Swagger UI, Redocly, or imported into API documentation platforms.
+
 ## API Endpoints
 
 ### Authentication

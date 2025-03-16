@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "swagger:generate": "ts-node src/generate-swagger.ts"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^3.0.0",
@@ -28,6 +29,7 @@
     "@nestjs/mongoose": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.0.6",
     "@nestjs/throttler": "^6.4.0",
     "argon2": "^0.41.1",
     "cache-manager": "^6.4.1",
