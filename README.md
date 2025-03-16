@@ -1,98 +1,175 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Todo API with JWT Authentication
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS application with MongoDB integration for authentication and todo management.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- User registration and authentication using JWT
+- Password security with Argon2 (salt+hash)
+- Todo CRUD operations with user-specific access
+- MongoDB integration with Mongoose
+- Input validation and data sanitization
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Prerequisites
 
-## Project setup
+- Node.js (v14 or later)
+- MongoDB (local or remote)
+- Redis (for token management and rate limiting)
+- pnpm (recommended) or npm/yarn
+
+## Installation
 
 ```bash
-$ pnpm install
+# Clone the repository
+git clone <repository-url>
+
+# Navigate to the project directory
+cd backend
+
+# Install dependencies
+pnpm install
 ```
 
-## Compile and run the project
+## Configuration
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+MONGODB_URI=mongodb://localhost:27017/todo-app
+JWT_SECRET=your_secret_jwt_key
+JWT_EXPIRATION=3600
+JWT_REFRESH_SECRET=your_secret_refresh_key
+JWT_REFRESH_EXPIRATION=7d
+JWT_REFRESH_EXPIRATION_SECONDS=604800
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password_here
+REDIS_USERNAME=default
+REDIS_TLS=false
+REDIS_TTL=3600
+THROTTLE_TTL=60
+THROTTLE_LIMIT=10
+PORT=3000
+```
+
+For Redis Cloud or other hosted Redis services:
+- Set `REDIS_PASSWORD` to the provided password
+- Set `REDIS_USERNAME` (usually "default" for Redis Cloud)
+- Set `REDIS_TLS=true` for secure connections
+
+## Running the Application
 
 ```bash
-# development
-$ pnpm run start
+# Development mode
+pnpm start:dev
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Production mode
+pnpm build
+pnpm start:prod
 ```
 
-## Run tests
+## API Endpoints
 
-```bash
-# unit tests
-$ pnpm run test
+### Authentication
 
-# e2e tests
-$ pnpm run test:e2e
+#### Register a new user
+```
+POST /auth/register
+Content-Type: application/json
 
-# test coverage
-$ pnpm run test:cov
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "firstName": "John",
+  "lastName": "Doe"
+}
 ```
 
-## Deployment
+#### Login
+```
+POST /auth/login
+Content-Type: application/json
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g mau
-$ mau deploy
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### Refresh Token
+```
+POST /auth/refresh
+Content-Type: application/json
 
-## Resources
+{
+  "refreshToken": "your_refresh_token"
+}
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+#### Logout
+```
+POST /auth/logout
+Authorization: Bearer <your_jwt_token>
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+#### Logout from all devices
+```
+POST /auth/logout-all
+Authorization: Bearer <your_jwt_token>
+```
 
-## Support
+### Todo Operations (Requires Authentication)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+All todo endpoints require a JWT token in the Authorization header:
+```
+Authorization: Bearer <your_jwt_token>
+```
 
-## Stay in touch
+#### Create a todo
+```
+POST /todos
+Content-Type: application/json
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+{
+  "title": "Sample Todo",
+  "description": "This is a sample todo item",
+  "completed": false
+}
+```
 
-## License
+#### Get all todos
+```
+GET /todos
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### Get a specific todo
+```
+GET /todos/:id
+```
+
+#### Update a todo
+```
+PUT /todos/:id
+Content-Type: application/json
+
+{
+  "title": "Updated Todo",
+  "description": "This todo has been updated",
+  "completed": true
+}
+```
+
+#### Delete a todo
+```
+DELETE /todos/:id
+```
+
+## Security Features
+
+- Password hashing with Argon2 (more secure than bcrypt)
+- JWT authentication with token expiration
+- Refresh tokens for maintaining sessions
+- Token blacklisting in Redis for secure logout
+- Rate limiting for login attempts
+- Input validation using class-validator
+- Data sanitization with whitelist option
