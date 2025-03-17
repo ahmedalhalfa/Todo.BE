@@ -16,8 +16,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private redisService: RedisService,
   ) {
     // Make sure we have a non-undefined secret key
-    const secret = configService.get<string>('JWT_SECRET') || 'fallback_secret_do_not_use_in_production';
-    
+    const secret =
+      configService.get<string>('JWT_SECRET') ||
+      'fallback_secret_do_not_use_in_production';
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -26,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(request: Request, payload: any) {
+  async validate(request: Request, payload: { sub: string; email: string }) {
     // Get the token from the Authorization header
     const authHeader = request.headers.authorization;
     if (!authHeader) {
@@ -35,9 +37,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         code: AUTH_ERRORS.TOKEN_INVALID.code,
       });
     }
-    
+
     const token = authHeader.split(' ')[1];
-    
+
     // Check if token is blacklisted
     const isBlacklisted = await this.redisService.isBlacklisted(token);
     if (isBlacklisted) {
@@ -46,7 +48,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         code: AUTH_ERRORS.TOKEN_REVOKED.code,
       });
     }
-    
+
     // Verify user exists
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
@@ -55,7 +57,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         code: AUTH_ERRORS.INVALID_CREDENTIALS.code,
       });
     }
-    
+
     return { userId: payload.sub, email: payload.email };
   }
-} 
+}

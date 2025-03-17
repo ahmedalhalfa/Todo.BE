@@ -42,4 +42,4 @@ export class UsersService {
     // Argon2 automatically generates a salt and applies it
     return argon2.hash(password);
   }
-} 
+}

@@ -9,7 +9,7 @@ import type { RedisClientOptions } from 'redis';
   imports: [
     CacheModule.registerAsync<RedisClientOptions>({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         store: redisStore,
         host: configService.get<string>('REDIS_HOST', 'localhost'),
         port: configService.get<number>('REDIS_PORT', 6379),
@@ -25,4 +25,4 @@ import type { RedisClientOptions } from 'redis';
   providers: [RedisService],
   exports: [CacheModule, RedisService],
 })
-export class RedisModule {} 
+export class RedisModule {}

@@ -11,12 +11,21 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { TodoResponse, TodosArrayResponse, DeleteTodoResponse } from './schemas/todo-response.schema';
+import {
+  TodoResponse,
+  DeleteTodoResponse,
+} from './schemas/todo-response.schema';
 
 @ApiTags('todos')
 @Controller('todos')
@@ -27,58 +36,90 @@ export class TodoController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new todo' })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Todo has been successfully created',
-    type: TodoResponse
+    type: TodoResponse,
   })
   @ApiResponse({ status: 400, description: 'Bad Request - Invalid data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
-  create(@Body() createTodoDto: CreateTodoDto, @Request() req) {
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Missing or invalid token',
+  })
+  create(
+    @Body() createTodoDto: CreateTodoDto,
+    @Request() req: { user: { userId: string } },
+  ) {
     return this.todoService.create(createTodoDto, req.user.userId);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all todos for the authenticated user' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiOperation({ summary: 'Get all todos for the current user' })
+  @ApiResponse({
+    status: 200,
     description: 'Returns an array of todos',
-    type: [TodoResponse]
+    type: [TodoResponse],
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
-  findAll(@Request() req) {
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Missing or invalid token',
+  })
+  findAll(@Request() req: { user: { userId: string } }) {
     return this.todoService.findAll(req.user.userId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific todo by ID' })
-  @ApiParam({ name: 'id', description: 'Todo ID' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Returns the todo item',
-    type: TodoResponse
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'The ID of the todo to retrieve',
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
-  @ApiResponse({ status: 404, description: 'Not Found - Todo with specified ID not found' })
-  findOne(@Param('id') id: string, @Request() req) {
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the todo with the specified ID',
+    type: TodoResponse,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Missing or invalid token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Todo with specified ID not found',
+  })
+  findOne(
+    @Param('id') id: string,
+    @Request() req: { user: { userId: string } },
+  ) {
     return this.todoService.findOne(id, req.user.userId);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a todo' })
-  @ApiParam({ name: 'id', description: 'Todo ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'The ID of the todo to update',
+  })
+  @ApiResponse({
+    status: 200,
     description: 'Todo has been successfully updated',
-    type: TodoResponse
+    type: TodoResponse,
   })
   @ApiResponse({ status: 400, description: 'Bad Request - Invalid data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
-  @ApiResponse({ status: 404, description: 'Not Found - Todo with specified ID not found' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Missing or invalid token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Todo with specified ID not found',
+  })
   update(
     @Param('id') id: string,
     @Body() updateTodoDto: UpdateTodoDto,
-    @Request() req,
+    @Request() req: { user: { userId: string } },
   ) {
     return this.todoService.update(id, updateTodoDto, req.user.userId);
   }
@@ -86,15 +127,28 @@ export class TodoController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a todo' })
-  @ApiParam({ name: 'id', description: 'Todo ID' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Todo has been successfully deleted',
-    type: DeleteTodoResponse
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'The ID of the todo to delete',
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
-  @ApiResponse({ status: 404, description: 'Not Found - Todo with specified ID not found' })
-  remove(@Param('id') id: string, @Request() req) {
+  @ApiResponse({
+    status: 200,
+    description: 'Todo has been successfully deleted',
+    type: DeleteTodoResponse,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Missing or invalid token',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Todo with specified ID not found',
+  })
+  remove(
+    @Param('id') id: string,
+    @Request() req: { user: { userId: string } },
+  ) {
     return this.todoService.remove(id, req.user.userId);
   }
-} 
+}

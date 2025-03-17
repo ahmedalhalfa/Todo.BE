@@ -10,4 +10,4 @@ export * from './filters/mongoose-exception.filter';
 export * from './exceptions/app-exception';
 
 // Export constants
-export * from './constants/error-codes'; 
+export * from './constants/error-codes';

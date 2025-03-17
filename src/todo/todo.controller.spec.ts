@@ -66,7 +66,10 @@ describe('TodoController', () => {
 
       const result = await controller.create(createTodoDto, mockRequest);
       expect(result).toEqual(mockTodo);
-      expect(mockTodoService.create).toHaveBeenCalledWith(createTodoDto, 'user-id');
+      expect(mockTodoService.create).toHaveBeenCalledWith(
+        createTodoDto,
+        'user-id',
+      );
     });
   });
 
@@ -87,7 +90,10 @@ describe('TodoController', () => {
 
       const result = await controller.findOne('a-mock-id', mockRequest);
       expect(result).toEqual(mockTodo);
-      expect(mockTodoService.findOne).toHaveBeenCalledWith('a-mock-id', 'user-id');
+      expect(mockTodoService.findOne).toHaveBeenCalledWith(
+        'a-mock-id',
+        'user-id',
+      );
     });
   });
 
@@ -103,12 +109,20 @@ describe('TodoController', () => {
         ...updateTodoDto,
       });
 
-      const result = await controller.update('a-mock-id', updateTodoDto, mockRequest);
+      const result = await controller.update(
+        'a-mock-id',
+        updateTodoDto,
+        mockRequest,
+      );
       expect(result).toEqual({
         ...mockTodo,
         ...updateTodoDto,
       });
-      expect(mockTodoService.update).toHaveBeenCalledWith('a-mock-id', updateTodoDto, 'user-id');
+      expect(mockTodoService.update).toHaveBeenCalledWith(
+        'a-mock-id',
+        updateTodoDto,
+        'user-id',
+      );
     });
   });
 
@@ -119,7 +133,10 @@ describe('TodoController', () => {
 
       const result = await controller.remove('a-mock-id', mockRequest);
       expect(result).toEqual(deleteResponse);
-      expect(mockTodoService.remove).toHaveBeenCalledWith('a-mock-id', 'user-id');
+      expect(mockTodoService.remove).toHaveBeenCalledWith(
+        'a-mock-id',
+        'user-id',
+      );
     });
   });
-}); 
+});

@@ -73,4 +73,4 @@ export const TODO_ERRORS = {
     code: 'NOT_TODO_OWNER',
     message: 'You do not own this todo',
   },
-}; 
+};

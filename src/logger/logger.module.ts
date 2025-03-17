@@ -12,4 +12,4 @@ export class LoggerModule {
   static configure() {
     return [LoggerMiddleware, PinoHttpMiddleware];
   }
-} 
+}

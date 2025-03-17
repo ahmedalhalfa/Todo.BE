@@ -22,4 +22,4 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
   ],
   exports: [],
 })
-export class CommonModule {} 
+export class CommonModule {}

@@ -56,11 +56,15 @@ export class TodoService {
   }
 
   @LogFunction()
-  async update(id: string, updateTodoDto: UpdateTodoDto, userId: string): Promise<Todo> {
+  async update(
+    id: string,
+    updateTodoDto: UpdateTodoDto,
+    userId: string,
+  ): Promise<Todo> {
     try {
       // First check if the todo exists and belongs to the user
       await this.findOne(id, userId);
-      
+
       const updatedTodo = await this.todoModel
         .findOneAndUpdate(
           { _id: id, userId },
@@ -68,21 +72,21 @@ export class TodoService {
           { new: true },
         )
         .exec();
-      
+
       if (!updatedTodo) {
         throw AppException.notFound({
           message: `${TODO_ERRORS.NOT_FOUND.message} with ID ${id}`,
           code: TODO_ERRORS.NOT_FOUND.code,
         });
       }
-      
+
       return updatedTodo;
     } catch (error) {
       // If it's already an AppException, rethrow it
       if (error instanceof AppException) {
         throw error;
       }
-      
+
       // Handle other errors
       if (error.name === 'MongoServerError' && error.code === 11000) {
         throw AppException.conflict({
@@ -98,8 +102,8 @@ export class TodoService {
   async remove(id: string, userId: string): Promise<{ message: string }> {
     // First check if the todo exists and belongs to the user
     await this.findOne(id, userId);
-    
+
     await this.todoModel.deleteOne({ _id: id, userId }).exec();
     return { message: 'Todo successfully deleted' };
   }
-} 
+}

@@ -14,7 +14,7 @@ describe('AppController (e2e)', () => {
   let todoModel: any;
 
   const testUserId = new mongoose.Types.ObjectId();
-  
+
   const mockUser = {
     _id: testUserId,
     id: testUserId.toString(),
@@ -33,27 +33,26 @@ describe('AppController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    })
-    .compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-    
+
     // Get required services and models
     jwtService = app.get<JwtService>(JwtService);
-    
+
     try {
       userModel = app.get(getModelToken('User'));
       todoModel = app.get(getModelToken('Todo'));
     } catch (error) {
       console.log('Models not available, using mocks for tests');
       // If models aren't available, we'll mock the JWT for tests
-      jwtToken = jwtService.sign({ 
-        userId: testUserId.toString(), 
-        email: mockUser.email 
+      jwtToken = jwtService.sign({
+        userId: testUserId.toString(),
+        email: mockUser.email,
       });
     }
-    
+
     await app.init();
 
     // Setup: try to create a test user and generate JWT token
@@ -61,9 +60,9 @@ describe('AppController (e2e)', () => {
       if (userModel) {
         await userModel.deleteMany({ email: mockUser.email });
         const user = await userModel.create(mockUser);
-        jwtToken = jwtService.sign({ 
+        jwtToken = jwtService.sign({
           userId: user._id.toString(),
-          email: user.email 
+          email: user.email,
         });
       }
     } catch (error) {
@@ -81,7 +80,7 @@ describe('AppController (e2e)', () => {
     } catch (error) {
       console.error('Cleanup error:', error);
     }
-    
+
     await app.close();
   });
 
@@ -97,7 +96,7 @@ describe('AppController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/auth/login')
         .send({ email: 'test@example.com', password: 'password123' })
-        .expect(res => {
+        .expect((res) => {
           // Accept both success and auth failure (since we don't know if this is a real DB)
           if (res.status !== 201 && res.status !== 401 && res.status !== 400) {
             throw new Error(`Unexpected status code: ${res.status}`);
@@ -115,12 +114,12 @@ describe('AppController (e2e)', () => {
         .post('/todos')
         .set('Authorization', `Bearer ${jwtToken}`)
         .send(mockTodo)
-        .expect(res => {
+        .expect((res) => {
           // Accept 201 (success) or 400/401 (validation/auth error)
           if (res.status !== 201 && res.status !== 400 && res.status !== 401) {
             throw new Error(`Unexpected status code: ${res.status}`);
           }
-          
+
           // If successful, save the ID for later tests
           if (res.status === 201 && res.body && res.body._id) {
             createdTodoId = res.body._id;
@@ -132,57 +131,66 @@ describe('AppController (e2e)', () => {
       await request(app.getHttpServer())
         .get('/todos')
         .set('Authorization', `Bearer ${jwtToken}`)
-        .expect(res => {
+        .expect((res) => {
           // Accept 200 (success) or 401 (auth error)
           if (res.status !== 200 && res.status !== 401) {
             throw new Error(`Unexpected status code: ${res.status}`);
           }
-          
+
           // If successful, verify it's an array
           if (res.status === 200) {
             expect(Array.isArray(res.body)).toBe(true);
           }
         });
     });
-    
+
     // Only run these tests if we successfully created a todo
-    (createdTodoId ? it : it.skip)('/todos/:id (GET) - should get a todo by id', async () => {
-      await request(app.getHttpServer())
-        .get(`/todos/${createdTodoId}`)
-        .set('Authorization', `Bearer ${jwtToken}`)
-        .expect(res => {
-          // Accept 200 (success) or 404 (not found)
-          if (res.status !== 200 && res.status !== 404) {
-            throw new Error(`Unexpected status code: ${res.status}`);
-          }
-        });
-    });
+    (createdTodoId ? it : it.skip)(
+      '/todos/:id (GET) - should get a todo by id',
+      async () => {
+        await request(app.getHttpServer())
+          .get(`/todos/${createdTodoId}`)
+          .set('Authorization', `Bearer ${jwtToken}`)
+          .expect((res) => {
+            // Accept 200 (success) or 404 (not found)
+            if (res.status !== 200 && res.status !== 404) {
+              throw new Error(`Unexpected status code: ${res.status}`);
+            }
+          });
+      },
+    );
 
-    (createdTodoId ? it : it.skip)('/todos/:id (PUT) - should update a todo', async () => {
-      const updateData = { title: 'Updated Todo', completed: true };
-      
-      await request(app.getHttpServer())
-        .put(`/todos/${createdTodoId}`)
-        .set('Authorization', `Bearer ${jwtToken}`)
-        .send(updateData)
-        .expect(res => {
-          // Accept 200 (success) or 404 (not found)
-          if (res.status !== 200 && res.status !== 404) {
-            throw new Error(`Unexpected status code: ${res.status}`);
-          }
-        });
-    });
+    (createdTodoId ? it : it.skip)(
+      '/todos/:id (PUT) - should update a todo',
+      async () => {
+        const updateData = { title: 'Updated Todo', completed: true };
 
-    (createdTodoId ? it : it.skip)('/todos/:id (DELETE) - should delete a todo', async () => {
-      await request(app.getHttpServer())
-        .delete(`/todos/${createdTodoId}`)
-        .set('Authorization', `Bearer ${jwtToken}`)
-        .expect(res => {
-          // Accept 200 (success) or 404 (not found)
-          if (res.status !== 200 && res.status !== 404) {
-            throw new Error(`Unexpected status code: ${res.status}`);
-          }
-        });
-    });
+        await request(app.getHttpServer())
+          .put(`/todos/${createdTodoId}`)
+          .set('Authorization', `Bearer ${jwtToken}`)
+          .send(updateData)
+          .expect((res) => {
+            // Accept 200 (success) or 404 (not found)
+            if (res.status !== 200 && res.status !== 404) {
+              throw new Error(`Unexpected status code: ${res.status}`);
+            }
+          });
+      },
+    );
+
+    (createdTodoId ? it : it.skip)(
+      '/todos/:id (DELETE) - should delete a todo',
+      async () => {
+        await request(app.getHttpServer())
+          .delete(`/todos/${createdTodoId}`)
+          .set('Authorization', `Bearer ${jwtToken}`)
+          .expect((res) => {
+            // Accept 200 (success) or 404 (not found)
+            if (res.status !== 200 && res.status !== 404) {
+              throw new Error(`Unexpected status code: ${res.status}`);
+            }
+          });
+      },
+    );
   });
 });

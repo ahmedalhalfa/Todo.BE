@@ -41,19 +41,25 @@ export class LoggerService {
   // Function to log function inputs and outputs
   logFunction(functionName: string, params: any, result?: any, error?: any) {
     if (error) {
-      this.logger.error({
-        function: functionName,
-        params,
-        error: error.message,
-        stack: error.stack,
-      }, `Error in function ${functionName}`);
+      this.logger.error(
+        {
+          function: functionName,
+          params,
+          error: error.message,
+          stack: error.stack,
+        },
+        `Error in function ${functionName}`,
+      );
       return;
     }
-    
-    this.logger.info({
-      function: functionName,
-      params,
-      result,
-    }, `Function ${functionName} executed`);
+
+    this.logger.info(
+      {
+        function: functionName,
+        params,
+        result,
+      },
+      `Function ${functionName} executed`,
+    );
   }
-} 
+}

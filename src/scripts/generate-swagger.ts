@@ -50,7 +50,7 @@ async function generateSwaggerJson() {
 }
 
 // Run the function
-generateSwaggerJson().catch(err => {
+generateSwaggerJson().catch((err) => {
   console.error('Error generating Swagger JSON:', err);
   process.exit(1);
-}); 
+});

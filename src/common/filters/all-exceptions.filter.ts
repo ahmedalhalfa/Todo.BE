@@ -1,10 +1,10 @@
-import { 
-  ExceptionFilter, 
-  Catch, 
-  ArgumentsHost, 
-  HttpException, 
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
   HttpStatus,
-  Logger
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { LoggerService } from '../../logger/logger.service';
@@ -18,23 +18,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    
+
     // Default error details
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errorName = 'InternalServerError';
-    
+
     // Get more information based on exception type
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const errorResponse = exception.getResponse();
-      
+
       message = this.extractErrorMessage(errorResponse, exception.message);
       errorName = exception.name;
     } else if (exception instanceof mongoose.Error.ValidationError) {
       status = HttpStatus.BAD_REQUEST;
       message = Object.values(exception.errors)
-        .map(err => err.message)
+        .map((err) => err.message)
         .join(', ');
       errorName = 'ValidationError';
     } else if (exception instanceof mongoose.Error.CastError) {
@@ -45,7 +45,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = exception.message;
       errorName = exception.name;
     }
-    
+
     // Prepare error response object
     const errorResponse = {
       statusCode: status,
@@ -55,24 +55,27 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: message,
       name: errorName,
     };
-    
+
     // Log the error details
     this.logger.error(
       `[${request.method}] ${request.url} - ${status} ${message}`,
       exception instanceof Error ? exception.stack : undefined,
-      { 
+      {
         errorDetails: errorResponse,
         body: request.body,
         params: request.params,
         query: request.query,
-      }
+      },
     );
-    
+
     // Send the error response
     response.status(status).json(errorResponse);
   }
 
-  private extractErrorMessage(errorResponse: unknown, defaultMessage: string): string {
+  private extractErrorMessage(
+    errorResponse: unknown,
+    defaultMessage: string,
+  ): string {
     if (typeof errorResponse !== 'object' || !errorResponse) {
       return defaultMessage;
     }
@@ -91,4 +94,4 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     return defaultMessage;
   }
-} 
+}

@@ -23,7 +23,11 @@ export class PinoHttpMiddleware implements NestMiddleware {
       customSuccessMessage: (req: IncomingMessage, res: ServerResponse) => {
         return `${req.method} ${req.url} completed with status ${res.statusCode}`;
       },
-      customErrorMessage: (req: IncomingMessage, res: ServerResponse, err: Error) => {
+      customErrorMessage: (
+        req: IncomingMessage,
+        res: ServerResponse,
+        err: Error,
+      ) => {
         return `${req.method} ${req.url} failed with status ${res.statusCode}`;
       },
       customAttributeKeys: {
@@ -47,7 +51,11 @@ export class PinoHttpMiddleware implements NestMiddleware {
       },
       autoLogging: true,
       redact: {
-        paths: ['req.headers.authorization', 'req.headers.cookie', 'req.body.password'],
+        paths: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          'req.body.password',
+        ],
         remove: true,
       },
     });
@@ -57,4 +65,4 @@ export class PinoHttpMiddleware implements NestMiddleware {
     this.logger(req, res);
     next();
   }
-} 
+}

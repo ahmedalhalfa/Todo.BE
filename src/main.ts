@@ -3,12 +3,16 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { LoggerService } from './logger/logger.service';
-import { HttpExceptionFilter, MongooseExceptionFilter, AllExceptionsFilter } from './common';
+import {
+  HttpExceptionFilter,
+  MongooseExceptionFilter,
+  AllExceptionsFilter,
+} from './common';
 
 async function bootstrap() {
   // Create logger instance
   const logger = new LoggerService();
-  
+
   // Create NestJS app with custom logger
   const app = await NestFactory.create(AppModule, {
     logger: {
@@ -19,10 +23,10 @@ async function bootstrap() {
       verbose: (message) => logger.verbose(message),
     },
   });
-  
+
   // Enable CORS
   app.enableCors();
-  
+
   // Enable validation
   app.useGlobalPipes(
     new ValidationPipe({
@@ -31,26 +35,28 @@ async function bootstrap() {
       transform: true,
       // Improved error messages for validation failures
       exceptionFactory: (errors) => {
-        const messages = errors.map(error => {
-          const constraints = error.constraints || {};
-          return Object.values(constraints).join(', ');
-        }).join('. ');
-        
+        const messages = errors
+          .map((error) => {
+            const constraints = error.constraints || {};
+            return Object.values(constraints).join(', ');
+          })
+          .join('. ');
+
         return new BadRequestException({
           message: `Validation failed: ${messages}`,
-          code: 'VALIDATION_ERROR'
+          code: 'VALIDATION_ERROR',
         });
       },
     }),
   );
-  
+
   // Apply global exception filters
   app.useGlobalFilters(
     new AllExceptionsFilter(),
     new HttpExceptionFilter(),
-    new MongooseExceptionFilter()
+    new MongooseExceptionFilter(),
   );
-  
+
   // Configure Swagger
   const config = new DocumentBuilder()
     .setTitle('Todo API')
@@ -70,12 +76,12 @@ async function bootstrap() {
       'JWT-auth', // This is a key to be used as a name in @ApiBearerAuth() decorator
     )
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`);
 }
-bootstrap();
+void bootstrap();

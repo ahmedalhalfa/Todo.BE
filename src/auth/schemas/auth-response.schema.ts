@@ -74,4 +74,4 @@ export class LogoutResponse {
     example: 'Logout successful',
   })
   message: string;
-} 
+}

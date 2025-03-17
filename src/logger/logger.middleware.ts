@@ -47,9 +47,9 @@ export class LoggerMiddleware implements NestMiddleware {
         body: responseBody || chunk,
       });
 
-      return originalEnd.apply(this, arguments);
+      return originalEnd.apply(this, [chunk, ...rest]);
     };
 
     next();
   }
-} 
+}

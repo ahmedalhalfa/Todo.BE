@@ -1,0 +1,4 @@
+**/*.spec.ts
+**/*.test.ts
+dist
+node_modules 

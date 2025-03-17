@@ -12,9 +12,7 @@ export class AppException extends HttpException {
     status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
   ) {
     const errorResponse: ErrorResponse =
-      typeof response === 'string'
-        ? { message: response }
-        : response;
+      typeof response === 'string' ? { message: response } : response;
 
     super(errorResponse, status);
   }
@@ -58,4 +56,4 @@ export class AppException extends HttpException {
   static serverError(response: string | ErrorResponse): AppException {
     return new AppException(response, HttpStatus.INTERNAL_SERVER_ERROR);
   }
-} 
+}

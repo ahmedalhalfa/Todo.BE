@@ -28,4 +28,4 @@ export class CreateTodoDto {
   @IsBoolean()
   @IsOptional()
   completed?: boolean;
-} 
+}

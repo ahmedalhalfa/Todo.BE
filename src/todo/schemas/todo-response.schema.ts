@@ -59,4 +59,4 @@ export class DeleteTodoResponse {
     example: 'Todo deleted successfully',
   })
   message: string;
-} 
+}

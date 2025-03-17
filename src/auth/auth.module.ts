@@ -17,14 +17,16 @@ import { RedisModule } from '../redis/redis.module';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => [{
-        ttl: config.get<number>('THROTTLE_TTL', 60),
-        limit: config.get<number>('THROTTLE_LIMIT', 10),
-      }],
+      useFactory: (config: ConfigService) => [
+        {
+          ttl: config.get<number>('THROTTLE_TTL', 60),
+          limit: config.get<number>('THROTTLE_LIMIT', 10),
+        },
+      ],
     }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRATION', '3600s'),
@@ -37,4 +39,4 @@ import { RedisModule } from '../redis/redis.module';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule {} 
+export class AuthModule {}
