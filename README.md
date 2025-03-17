@@ -339,4 +339,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 📞 Support
 
-For support, email [your-email@example.com](mailto:your-email@example.com) or open an issue on GitHub.
+For support, email [ah.alhalfa@gmail.com](mailto:ah.alhalfa@gmail.com) or open an issue on GitHub.
