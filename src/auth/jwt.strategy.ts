@@ -1,10 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../users/users.service';
 import { RedisService } from '../redis/redis.service';
 import { Request } from 'express';
+import { AppException } from '../common/exceptions/app-exception';
+import { AUTH_ERRORS } from '../common/constants/error-codes';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -28,7 +30,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Get the token from the Authorization header
     const authHeader = request.headers.authorization;
     if (!authHeader) {
-      throw new UnauthorizedException('Invalid token');
+      throw AppException.unauthorized({
+        message: AUTH_ERRORS.TOKEN_INVALID.message,
+        code: AUTH_ERRORS.TOKEN_INVALID.code,
+      });
     }
     
     const token = authHeader.split(' ')[1];
@@ -36,13 +41,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Check if token is blacklisted
     const isBlacklisted = await this.redisService.isBlacklisted(token);
     if (isBlacklisted) {
-      throw new UnauthorizedException('Token has been revoked');
+      throw AppException.unauthorized({
+        message: AUTH_ERRORS.TOKEN_REVOKED.message,
+        code: AUTH_ERRORS.TOKEN_REVOKED.code,
+      });
     }
     
     // Verify user exists
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException();
+      throw AppException.unauthorized({
+        message: AUTH_ERRORS.INVALID_CREDENTIALS.message,
+        code: AUTH_ERRORS.INVALID_CREDENTIALS.code,
+      });
     }
     
     return { userId: payload.sub, email: payload.email };

@@ -9,6 +9,7 @@ import { TodoModule } from './todo/todo.module';
 import { LoggerModule } from './logger/logger.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './logger/logger.interceptor';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { LoggingInterceptor } from './logger/logger.interceptor';
       }),
       inject: [ConfigService],
     }),
+    CommonModule,
     LoggerModule,
     AuthModule,
     UsersModule,

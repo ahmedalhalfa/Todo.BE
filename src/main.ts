@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { LoggerService } from './logger/logger.service';
+import { HttpExceptionFilter, MongooseExceptionFilter, AllExceptionsFilter } from './common';
 
 async function bootstrap() {
   // Create logger instance
@@ -28,7 +29,26 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      // Improved error messages for validation failures
+      exceptionFactory: (errors) => {
+        const messages = errors.map(error => {
+          const constraints = error.constraints || {};
+          return Object.values(constraints).join(', ');
+        }).join('. ');
+        
+        return new BadRequestException({
+          message: `Validation failed: ${messages}`,
+          code: 'VALIDATION_ERROR'
+        });
+      },
     }),
+  );
+  
+  // Apply global exception filters
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new HttpExceptionFilter(),
+    new MongooseExceptionFilter()
   );
   
   // Configure Swagger
