@@ -35,4 +35,23 @@ export class Todo extends Document {
   userId: string;
 }
 
-export const TodoSchema = SchemaFactory.createForClass(Todo); 
+export const TodoSchema = SchemaFactory.createForClass(Todo);
+
+// Add transform to convert MongoDB ObjectIds to strings
+TodoSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+});
+
+TodoSchema.set('toObject', {
+  transform: (doc, ret) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+}); 

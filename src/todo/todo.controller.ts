@@ -8,12 +8,15 @@ import {
   Put,
   Request,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { TodoResponse, TodosArrayResponse, DeleteTodoResponse } from './schemas/todo-response.schema';
 
 @ApiTags('todos')
 @Controller('todos')
@@ -27,6 +30,7 @@ export class TodoController {
   @ApiResponse({ 
     status: 201, 
     description: 'Todo has been successfully created',
+    type: TodoResponse
   })
   @ApiResponse({ status: 400, description: 'Bad Request - Invalid data' })
   @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
@@ -39,6 +43,7 @@ export class TodoController {
   @ApiResponse({ 
     status: 200, 
     description: 'Returns an array of todos',
+    type: [TodoResponse]
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
   findAll(@Request() req) {
@@ -51,6 +56,7 @@ export class TodoController {
   @ApiResponse({ 
     status: 200, 
     description: 'Returns the todo item',
+    type: TodoResponse
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
   @ApiResponse({ status: 404, description: 'Not Found - Todo with specified ID not found' })
@@ -64,6 +70,7 @@ export class TodoController {
   @ApiResponse({ 
     status: 200, 
     description: 'Todo has been successfully updated',
+    type: TodoResponse
   })
   @ApiResponse({ status: 400, description: 'Bad Request - Invalid data' })
   @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
@@ -77,11 +84,13 @@ export class TodoController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a todo' })
   @ApiParam({ name: 'id', description: 'Todo ID' })
   @ApiResponse({ 
     status: 200, 
     description: 'Todo has been successfully deleted',
+    type: DeleteTodoResponse
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Missing or invalid token' })
   @ApiResponse({ status: 404, description: 'Not Found - Todo with specified ID not found' })

@@ -41,11 +41,13 @@ export class TodoService {
     return updatedTodo;
   }
 
-  async remove(id: string, userId: string): Promise<void> {
+  async remove(id: string, userId: string): Promise<{ message: string }> {
     const result = await this.todoModel.deleteOne({ _id: id, userId }).exec();
     
     if (result.deletedCount === 0) {
       throw new NotFoundException(`Todo with ID ${id} not found`);
     }
+    
+    return { message: 'Todo deleted successfully' };
   }
 } 

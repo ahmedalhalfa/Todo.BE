@@ -107,36 +107,28 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string, token: string) {
-    // Extract token from Bearer format
-    const accessToken = token.split(' ')[1];
-    
-    try {
-      // Decode token to get expiry
-      const decoded = this.jwtService.decode(accessToken);
-      if (!decoded || typeof decoded !== 'object') {
-        throw new BadRequestException('Invalid token');
-      }
-      
-      // Calculate remaining time to expiry
-      const expiresAt = decoded.exp;
-      const currentTime = Math.floor(Date.now() / 1000);
-      const remainingTime = expiresAt - currentTime;
-      
-      if (remainingTime > 0) {
-        // Add token to blacklist in Redis with TTL equal to remaining time
-        await this.redisService.addToBlacklist(accessToken, remainingTime);
-      }
-      
-      return { message: 'Logged out successfully' };
-    } catch (error) {
-      throw new BadRequestException('Invalid token');
+  async logout(userId: string, authToken: string): Promise<{ message: string }> {
+    if (!authToken) {
+      throw new BadRequestException('Token is required');
     }
+
+    const token = authToken.split(' ')[1];
+    
+    if (!token) {
+      throw new BadRequestException('Invalid token format');
+    }
+    
+    // Blacklist the token
+    await this.redisService.addToBlacklist(token, this.getTokenExpiry());
+    
+    return { message: 'Logout successful' };
   }
 
-  async logoutAll(userId: string) {
+  async logoutAll(userId: string): Promise<{ message: string }> {
+    // Remove all refresh tokens for the user
     await this.redisService.deleteAllRefreshTokens(userId);
-    return { message: 'Logged out from all devices' };
+    
+    return { message: 'Logged out from all devices successfully' };
   }
 
   private async generateTokens(userId: string, email: string) {
@@ -180,5 +172,11 @@ export class AuthService {
 
   private async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return argon2.verify(hashedPassword, plainPassword);
+  }
+
+  private getTokenExpiry(): number {
+    // Implement the logic to calculate the expiry time of the token
+    // This is a placeholder and should be replaced with the actual implementation
+    return 3600; // Assuming a default expiry time of 1 hour
   }
 } 

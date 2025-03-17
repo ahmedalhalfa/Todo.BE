@@ -18,6 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { AuthResponse, AuthTokensResponse, LogoutResponse } from './schemas/auth-response.schema';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -31,6 +32,7 @@ export class AuthController {
   @ApiResponse({ 
     status: 201, 
     description: 'User has been successfully registered and tokens generated',
+    type: AuthResponse
   })
   @ApiResponse({ status: 400, description: 'Bad Request - Invalid data' })
   @ApiResponse({ status: 409, description: 'Conflict - Email already exists' })
@@ -45,6 +47,7 @@ export class AuthController {
   @ApiResponse({ 
     status: 200, 
     description: 'User has been successfully logged in and tokens generated',
+    type: AuthResponse
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid credentials' })
   @ApiResponse({ status: 403, description: 'Forbidden - Too many login attempts' })
@@ -58,6 +61,7 @@ export class AuthController {
   @ApiResponse({ 
     status: 200, 
     description: 'Tokens have been successfully refreshed',
+    type: AuthTokensResponse
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid refresh token' })
   refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
@@ -72,6 +76,7 @@ export class AuthController {
   @ApiResponse({ 
     status: 200, 
     description: 'User has been successfully logged out',
+    type: LogoutResponse
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid token' })
   logout(@Req() req, @Headers('authorization') token: string) {
@@ -86,6 +91,7 @@ export class AuthController {
   @ApiResponse({ 
     status: 200, 
     description: 'User has been successfully logged out from all devices',
+    type: LogoutResponse
   })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid token' })
   logoutAll(@Req() req) {
