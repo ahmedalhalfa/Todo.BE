@@ -4,11 +4,13 @@ import { Model } from 'mongoose';
 import { Todo } from './todo.schema';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import { LogFunction } from '../logger/logger.decorator';
 
 @Injectable()
 export class TodoService {
   constructor(@InjectModel(Todo.name) private todoModel: Model<Todo>) {}
 
+  @LogFunction()
   async create(createTodoDto: CreateTodoDto, userId: string): Promise<Todo> {
     const newTodo = new this.todoModel({
       ...createTodoDto,
@@ -17,10 +19,12 @@ export class TodoService {
     return newTodo.save();
   }
 
+  @LogFunction()
   async findAll(userId: string): Promise<Todo[]> {
     return this.todoModel.find({ userId }).exec();
   }
 
+  @LogFunction()
   async findOne(id: string, userId: string): Promise<Todo> {
     const todo = await this.todoModel.findOne({ _id: id, userId }).exec();
     if (!todo) {
@@ -29,9 +33,17 @@ export class TodoService {
     return todo;
   }
 
+  @LogFunction()
   async update(id: string, updateTodoDto: UpdateTodoDto, userId: string): Promise<Todo> {
+    // First check if the todo exists and belongs to the user
+    await this.findOne(id, userId);
+    
     const updatedTodo = await this.todoModel
-      .findOneAndUpdate({ _id: id, userId }, updateTodoDto, { new: true })
+      .findOneAndUpdate(
+        { _id: id, userId },
+        { $set: updateTodoDto },
+        { new: true },
+      )
       .exec();
     
     if (!updatedTodo) {
@@ -41,13 +53,12 @@ export class TodoService {
     return updatedTodo;
   }
 
+  @LogFunction()
   async remove(id: string, userId: string): Promise<{ message: string }> {
-    const result = await this.todoModel.deleteOne({ _id: id, userId }).exec();
+    // First check if the todo exists and belongs to the user
+    await this.findOne(id, userId);
     
-    if (result.deletedCount === 0) {
-      throw new NotFoundException(`Todo with ID ${id} not found`);
-    }
-    
-    return { message: 'Todo deleted successfully' };
+    await this.todoModel.deleteOne({ _id: id, userId }).exec();
+    return { message: 'Todo successfully deleted' };
   }
 } 

@@ -2,9 +2,22 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { LoggerService } from './logger/logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // Create logger instance
+  const logger = new LoggerService();
+  
+  // Create NestJS app with custom logger
+  const app = await NestFactory.create(AppModule, {
+    logger: {
+      log: (message) => logger.log(message),
+      error: (message, trace) => logger.error(message, trace),
+      warn: (message) => logger.warn(message),
+      debug: (message) => logger.debug(message),
+      verbose: (message) => logger.verbose(message),
+    },
+  });
   
   // Enable CORS
   app.enableCors();
@@ -41,6 +54,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  logger.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();
