@@ -6,44 +6,71 @@ import { Todo } from './todo.schema';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { AppException } from '../common/exceptions/app-exception';
+import mongoose from 'mongoose';
+
+// Create a mock for the logger decorator
+jest.mock('../logger/logger.decorator', () => ({
+  LogFunction: () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
+    descriptor.value = function (...args: any[]) {
+      return originalMethod.apply(this, args);
+    };
+    return descriptor;
+  }
+}));
 
 describe('TodoService', () => {
   let service: TodoService;
-  let model: Model<Todo>;
+  let mockTodoModel: any;
 
   const mockTodo = {
-    _id: 'a-mock-id',
+    _id: new mongoose.Types.ObjectId().toString(),
     title: 'Test Todo',
     description: 'Test description',
     completed: false,
     userId: 'user-id',
-    save: jest.fn(),
-    toJSON: jest.fn().mockReturnThis(),
-  };
-
-  const mockTodoModel = {
-    new: jest.fn().mockResolvedValue(mockTodo),
-    constructor: jest.fn().mockResolvedValue(mockTodo),
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findOneAndUpdate: jest.fn(),
-    deleteOne: jest.fn(),
-    exec: jest.fn(),
   };
 
   beforeEach(async () => {
+    // Create a proper mongoose model mock that can be instantiated with 'new'
+    class MockTodoModel {
+      constructor(dto) {
+        Object.assign(this, mockTodo, dto);
+      }
+      
+      save = jest.fn().mockImplementation(() => {
+        return Promise.resolve(this);
+      });
+      
+      static find = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue([mockTodo])
+      });
+      
+      static findOne = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockTodo)
+      });
+      
+      static findOneAndUpdate = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ ...mockTodo, title: 'Updated Todo' })
+      });
+      
+      static deleteOne = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ deletedCount: 1 })
+      });
+    }
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TodoService,
         {
           provide: getModelToken(Todo.name),
-          useValue: mockTodoModel,
+          useValue: MockTodoModel,
         },
       ],
     }).compile();
 
     service = module.get<TodoService>(TodoService);
-    model = module.get<Model<Todo>>(getModelToken(Todo.name));
+    mockTodoModel = module.get(getModelToken(Todo.name));
   });
 
   it('should be defined', () => {
@@ -57,64 +84,67 @@ describe('TodoService', () => {
         description: 'Test description',
         completed: false,
       };
-      
-      mockTodoModel.new.mockImplementation(() => ({
-        ...mockTodo,
-        save: jest.fn().mockResolvedValueOnce(mockTodo),
-      }));
 
       const result = await service.create(createTodoDto, 'user-id');
-      expect(result).toEqual(mockTodo);
+      
+      expect(result).toEqual(expect.objectContaining({
+        title: createTodoDto.title,
+        description: createTodoDto.description,
+      }));
     });
 
     it('should throw conflict exception when todo already exists', async () => {
+      // Create a separate test with a custom model mock
+      const mockError: any = new Error('Duplicate key error');
+      mockError.name = 'MongoServerError';
+      mockError.code = 11000;
+
+      // Create a custom test module with a mock that always throws
+      const moduleRef = await Test.createTestingModule({
+        providers: [
+          TodoService,
+          {
+            provide: getModelToken(Todo.name),
+            useValue: {
+              new: jest.fn().mockImplementation(() => ({
+                save: jest.fn().mockRejectedValue(mockError),
+              })),
+            },
+          },
+        ],
+      }).compile();
+
+      const testService = moduleRef.get<TodoService>(TodoService);
+      
       const createTodoDto: CreateTodoDto = {
-        title: 'Test Todo',
+        title: 'Duplicate Todo',
         description: 'Test description',
         completed: false,
       };
-      
-      const mongoError = {
-        name: 'MongoServerError',
-        code: 11000,
-      };
-      
-      mockTodoModel.new.mockImplementation(() => ({
-        ...mockTodo,
-        save: jest.fn().mockRejectedValueOnce(mongoError),
-      }));
 
-      await expect(service.create(createTodoDto, 'user-id')).rejects.toThrow();
+      await expect(testService.create(createTodoDto, 'user-id')).rejects.toThrow();
     });
   });
 
   describe('findAll', () => {
     it('should return an array of todos', async () => {
       const userId = 'user-id';
-      const mockTodoArray = [mockTodo];
       
-      mockTodoModel.find.mockReturnValue({
-        exec: jest.fn().mockResolvedValueOnce(mockTodoArray),
-      });
-
       const result = await service.findAll(userId);
-      expect(result).toEqual(mockTodoArray);
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([mockTodo]);
       expect(mockTodoModel.find).toHaveBeenCalledWith({ userId });
     });
   });
 
   describe('findOne', () => {
     it('should find and return a todo by id', async () => {
-      const todoId = 'a-valid-id-123456789abc';
+      const validMongoId = new mongoose.Types.ObjectId().toString();
       const userId = 'user-id';
-      
-      mockTodoModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValueOnce(mockTodo),
-      });
 
-      const result = await service.findOne(todoId, userId);
+      const result = await service.findOne(validMongoId, userId);
       expect(result).toEqual(mockTodo);
-      expect(mockTodoModel.findOne).toHaveBeenCalledWith({ _id: todoId, userId });
+      expect(mockTodoModel.findOne).toHaveBeenCalledWith({ _id: validMongoId, userId });
     });
 
     it('should throw bad request when id is invalid', async () => {
@@ -125,14 +155,21 @@ describe('TodoService', () => {
     });
 
     it('should throw not found when todo does not exist', async () => {
-      const todoId = 'a-valid-id-123456789abc';
+      const validMongoId = new mongoose.Types.ObjectId().toString();
       const userId = 'user-id';
       
-      mockTodoModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValueOnce(null),
+      // Save original findOne method
+      const originalFindOne = mockTodoModel.findOne;
+      
+      // Override for this test to return null
+      mockTodoModel.findOne = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
       });
 
-      await expect(service.findOne(todoId, userId)).rejects.toThrow();
+      await expect(service.findOne(validMongoId, userId)).rejects.toThrow();
+      
+      // Restore original method
+      mockTodoModel.findOne = originalFindOne;
     });
   });
 }); 

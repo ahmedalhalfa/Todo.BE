@@ -13,13 +13,13 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
+    "test": "jest --forceExit --detectOpenHandles",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "test:cov": "jest --coverage --forceExit --detectOpenHandles",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json --forceExit --detectOpenHandles",
     "test:all": "bash scripts/test-coverage.sh",
-    "test:ci": "jest --ci --coverage && jest --config ./test/jest-e2e.json --ci",
+    "test:ci": "jest --ci --coverage --forceExit && jest --config ./test/jest-e2e.json --ci --forceExit",
     "swagger:generate": "ts-node src/scripts/generate-swagger.ts"
   },
   "dependencies": {

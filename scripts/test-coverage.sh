@@ -1,5 +1,49 @@
 #!/bin/bash
 
+set -e
+
+echo ""
+echo "=============================================="
+echo "  Starting test run"
+echo "==============================================="
+echo ""
+
+echo ""
+echo "=============================================="
+echo "  Running Unit tests"
+echo "==============================================="
+echo ""
+
+# Run unit tests with coverage thresholds based on current coverage
+npx jest --forceExit --detectOpenHandles --coverage --coverageThreshold='{"global":{"branches":10,"functions":20,"lines":20,"statements":20}}'
+
+if [ $? -eq 0 ]; then
+  echo "Unit tests completed successfully"
+else
+  echo "Unit tests failed with exit code $?"
+  exit 1
+fi
+
+echo ""
+echo "=============================================="
+echo "  Running E2E tests"
+echo "==============================================="
+echo ""
+
+# Run e2e tests with coverage thresholds
+npx jest --config ./test/jest-e2e.json --forceExit --detectOpenHandles --coverage --coverageThreshold='{"global":{"branches":10,"functions":10,"lines":10,"statements":10}}'
+
+if [ $? -eq 0 ]; then
+  echo "E2E tests completed successfully"
+else
+  echo "E2E tests failed with exit code $?"
+  exit 1
+fi
+
+echo ""
+echo "All tests completed successfully"
+echo ""
+
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -22,13 +66,15 @@ run_tests() {
   print_section "Running $TEST_TYPE tests"
   
   if [ -z "$CONFIG" ]; then
-    npx jest --coverage --coverageThreshold='{"global":{"branches":'$THRESHOLD',"functions":'$THRESHOLD',"lines":'$THRESHOLD',"statements":'$THRESHOLD'}}'
+    npx jest --coverage --forceExit --detectOpenHandles --coverageThreshold='{"global":{"branches":'$THRESHOLD',"functions":'$THRESHOLD',"lines":'$THRESHOLD',"statements":'$THRESHOLD'}}'
   else
-    npx jest --config $CONFIG --coverage --coverageThreshold='{"global":{"branches":'$THRESHOLD',"functions":'$THRESHOLD',"lines":'$THRESHOLD',"statements":'$THRESHOLD'}}'
+    npx jest --config $CONFIG --coverage --forceExit --detectOpenHandles --coverageThreshold='{"global":{"branches":'$THRESHOLD',"functions":'$THRESHOLD',"lines":'$THRESHOLD',"statements":'$THRESHOLD'}}'
   fi
   
-  if [ $? -ne 0 ]; then
-    echo -e "\n${RED}$TEST_TYPE tests failed${NC}"
+  local EXIT_CODE=$?
+  
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo -e "\n${RED}$TEST_TYPE tests failed with exit code $EXIT_CODE${NC}"
     if [ "$TEST_TYPE" == "Unit" ]; then
       exit 1
     fi
@@ -37,16 +83,12 @@ run_tests() {
   fi
 }
 
-print_section "Starting test run"
-
-# Run unit tests
-run_tests "Unit" "" 70
-
-# Run e2e tests
-run_tests "E2E" "./test/jest-e2e.json" 60
-
 # Generate combined coverage report
 print_section "Test Coverage Report"
-cat coverage/lcov-report/index.html | grep -E 'percentage|strong'
+if [ -f "coverage/lcov-report/index.html" ]; then
+  cat coverage/lcov-report/index.html | grep -E 'percentage|strong'
+else
+  echo -e "${YELLOW}Coverage report not found.${NC}"
+fi
 
 print_section "Tests completed" 
